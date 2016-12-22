@@ -1,0 +1,34 @@
+#pragma once
+#include <string>
+
+namespace QCOS
+{
+	class LogFile
+	{
+	public:
+		std::string FileName;
+		std::string PathName;
+		std::string FullPathName;
+		std::string DayFolder;
+		std::string HourFolder;
+
+		bool operator==(const LogFile& rhs)
+		{
+			if (FileName == rhs.FileName &&
+				PathName == rhs.PathName &&
+				FullPathName == rhs.FullPathName &&
+				DayFolder == rhs.DayFolder &&
+				HourFolder == rhs.HourFolder)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		bool operator!=(const LogFile& rhs)
+		{
+			return !this->operator==(rhs);
+		}
+	};
+}

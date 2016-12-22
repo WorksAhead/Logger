@@ -1,0 +1,18 @@
+{
+        "AppID":1253129291,
+        "SecretID":"AKIDSDtfjdrqDOLBwWv6UmsqcDoHegYEuNzd",
+        "SecretKey":"rbEhy8C5m9O1kOq9GB0e6MPG1Q7iEboq",
+        "Region":"tj",
+        "SignExpiredTime":360,
+        "CurlConnectTimeoutInms":60000,
+        "CurlGlobalConnectTimeoutInms":300000,
+        "UploadSliceSize":1048576,
+        "L5ModID":-1,
+        "L5CmdID":-1,
+        "IsUploadTakeSha":1,
+        "DownloadDomainType":2,
+        "SelfDomain":"",
+        "UploadThreadPoolSize":5,
+        "AsynThreadPoolSize":2,
+        "LogoutType":1
+}
