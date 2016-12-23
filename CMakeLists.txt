@@ -27,6 +27,10 @@ if(UNIX)
     set(COS_LIBRARIES cossdk curl ssl dl crypto rt jsoncpp stdc++ pthread z)
 endif()
 
+if(WIN32)
+    add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+endif()
+
 add_subdirectory(./QCOSLogger)
 
 include_directories(./QCOSLogger)

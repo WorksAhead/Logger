@@ -1,20 +1,22 @@
 #pragma once
 
-#include <string>
+#include "LogFile.h"
 
 namespace QCOS
 {
-	class LogFile;
-	class UploaderBase
-	{
-	public:
-		typedef enum
-		{
-			UPLOADER_TYPE_COS,
-		} UploaderType;
+    class UploaderBase
+    {
+    public:
+        typedef enum
+        {
+#if defined(__linux__)
+            UPLOADER_TYPE_COS,
+#endif
+            UPLOADER_TYPE_FAKE,
+        } UploaderType;
 
-		virtual ~UploaderBase() {};
+        virtual ~UploaderBase() {};
 
-		virtual void UploadLogFile(const LogFile& logFile) = 0;
-	};
+        virtual bool UploadLogFile(const LogFile& logFile) = 0;
+    };
 }

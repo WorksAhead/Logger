@@ -3,32 +3,34 @@
 
 namespace QCOS
 {
-	class LogFile
-	{
-	public:
-		std::string FileName;
-		std::string PathName;
-		std::string FullPathName;
-		std::string DayFolder;
-		std::string HourFolder;
+    class LogFile
+    {
+    public:
+        std::string FileName;
+        std::string PathName;
+        std::string FullPathName;
+        std::string DayFolder;
+        std::string HourFolder;
 
-		bool operator==(const LogFile& rhs)
-		{
-			if (FileName == rhs.FileName &&
-				PathName == rhs.PathName &&
-				FullPathName == rhs.FullPathName &&
-				DayFolder == rhs.DayFolder &&
-				HourFolder == rhs.HourFolder)
-			{
-				return true;
-			}
+        void Delete() {}
 
-			return false;
-		}
+        bool operator==(const LogFile& rhs) const
+        {
+            if (FileName == rhs.FileName &&
+                PathName == rhs.PathName &&
+                FullPathName == rhs.FullPathName &&
+                DayFolder == rhs.DayFolder &&
+                HourFolder == rhs.HourFolder)
+            {
+                return true;
+            }
 
-		bool operator!=(const LogFile& rhs)
-		{
-			return !this->operator==(rhs);
-		}
-	};
+            return false;
+        }
+
+        bool operator!=(const LogFile& rhs) const
+        {
+            return !this->operator==(rhs);
+        }
+    };
 }

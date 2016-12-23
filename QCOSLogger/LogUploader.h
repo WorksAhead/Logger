@@ -4,31 +4,37 @@
 
 #include <boost/thread.hpp>
 #include <boost/container/deque.hpp>
+#include <boost/signals2.hpp>
 
 namespace QCOS
 {
-	class LogUploader
-	{
-	public:
-		LogUploader(UploaderBase::UploaderType uploader = UploaderBase::UPLOADER_TYPE_COS);
-		~LogUploader();
+    class LogUploader
+    {
+        typedef boost::signals2::signal<void(const LogFile&, bool result)> UploadSignal;
 
-		void UploadLogFile(const LogFile& logFile);
+    public:
+        LogUploader(UploaderBase::UploaderType type);
+        ~LogUploader();
 
-		void operator()();
+        void UploadLogFile(const LogFile& logFile);
 
-	private:
-		void SyncFiles();
+        void RegisterUploadCallback(const boost::function<void(const LogFile&, bool result)>& callback);
 
-	private:
-		bool m_Stop {false};
-		
-		boost::mutex m_Mutex;
-		boost::thread* m_Thread;
-		
-		boost::container::deque<LogFile> m_LogFileQueue;
-		boost::container::deque<LogFile> m_UploadFileQueue;
+        void operator()();
 
-		UploaderBase* m_Uploader;
-	};
+    private:
+        void SyncFiles();
+        
+    private:
+        bool m_Stop{ false };
+
+        boost::mutex m_Mutex;
+        boost::thread* m_Thread{ nullptr };
+
+        boost::container::deque<LogFile> m_LogFileQueue;
+        boost::container::deque<LogFile> m_UploadFileQueue;
+
+        UploaderBase* m_Uploader{ nullptr };
+        UploadSignal m_UploadSignal;
+    };
 }

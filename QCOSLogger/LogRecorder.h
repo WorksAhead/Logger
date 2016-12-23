@@ -9,36 +9,36 @@
 
 namespace QCOS
 {
-	class LogUploader;
-	class LogRecorder
-	{
-	public:
-		// Log record interval, in minute.
-		LogRecorder(int interval, LogUploader& uploader, const std::string& logRootDir);
-		~LogRecorder();
+    class LogRecorder
+    {
+    public:
+        // Log record interval, in seconds.
+        LogRecorder(const std::string& logRootDir, int interval);
+        ~LogRecorder();
 
-		void WriteLog(const std::string& text);
+        void WriteLog(const std::string& text);
 
-		void operator()();
+        void operator()();
 
-	private:
-		void UpdateLogFile();
+    private:
+        void UpdateLogFile();
+        void SyncFile();
 
-	private:
-		bool m_Stop {false};
-		// Record interval in minute.
-		int m_Interval {5};
+    private:
+        std::string m_LogRootDir;
 
-		LogUploader& m_Uploader;
-		
-		boost::mutex m_Mutex;
-		boost::thread* m_Thread;
-		
-		boost::container::deque<std::string> m_LogQueue;
+        bool m_Stop{ false };
+        // Record interval in seconds.
+        int m_Interval{ 300 };
 
-		LogFile m_LogFile;
-		boost::filesystem::ofstream m_FileStream;
+        boost::mutex m_Mutex;
+        boost::thread* m_Thread{ nullptr };
 
-		std::string m_LogRootDir;
-	};
+        // Current logging file.
+        LogFile m_LogFile;
+        // Current logginf file stream.
+        boost::filesystem::ofstream m_FileStream;
+
+        boost::container::deque<std::string> m_LogQueue;
+    };
 }
