@@ -23,7 +23,7 @@ using namespace qcloud_cos;
 
 using namespace QCOS;
 
-void
+bool
 COSUploader::UploadLogFile(const LogFile& logFile)
 {
     std::string bucket = "testbucket";
