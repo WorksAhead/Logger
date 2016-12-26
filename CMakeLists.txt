@@ -16,7 +16,7 @@ if(UNIX)
     find_package(Boost
                  1.6.2
                  REQUIRED
-                 COMPONENTS system thread)
+                 COMPONENTS filesystem thread system)
     include_directories(${Boost_INCLUDE_DIRS})
 
     add_subdirectory(./cos-cpp-sdk-v4/src)
@@ -24,7 +24,7 @@ if(UNIX)
     link_directories(./cos-cpp-sdk-v4/lib)
     link_directories(./cos-cpp-sdk-v4/build/lib)
 
-    set(COS_LIBRARIES cossdk curl ssl dl crypto rt jsoncpp stdc++ pthread z)
+    set(COS_LIBRARIES cossdk curl ssl dl crypto rt jsoncpp stdc++ pthread z dl)
 endif()
 
 if(WIN32)

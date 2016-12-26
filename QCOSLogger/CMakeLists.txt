@@ -18,7 +18,7 @@ if(UNIX)
     find_package(Boost
                  1.6.2
                  REQUIRED
-                 COMPONENTS system thread)
+                 COMPONENTS filesystem thread system)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
@@ -44,8 +44,8 @@ add_library(QCOSLogger
             LogUploader.h
             COSUploader.cpp
             COSUploader.h
-			FakeUploader.cpp
-			FakeUploader.h
+	    FakeUploader.cpp
+            FakeUploader.h
             LogMonitor.cpp
             LogMonitor.h)
 #set_target_properties(QCOSLogger PROPERTIES OUTPUT_NAME_DEBUG QCOSLogger_d)
