@@ -28,7 +28,7 @@ COSUploader::UploadLogFile(const LogFile& logFile)
 {
     std::string bucket = "testbucket";
     std::string srcpath = logFile.FullPathName;
-    std::string dstpath = "/" + logFile.DayFolder + "/" + logFile.HourFolder + logFile.FileName;
+    std::string dstpath = "/" + logFile.DayFolder + "/" + logFile.HourFolder + "/" + logFile.FileName;
 
     FileUploadReq fileUploadReq1(bucket, srcpath, dstpath);
     fileUploadReq1.setInsertOnly(0);
