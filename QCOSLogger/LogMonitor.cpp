@@ -17,7 +17,7 @@ LogMonitor::LogMonitor(const std::string& logRootDir, int interval, LogUploader&
     , m_Uploader{ uploader }
 {
     // Register callback to uploader.
-    uploader.RegisterUploadCallback(boost::bind(&LogMonitor::UploadCallback, this, _1, _2));
+    m_Connection = uploader.RegisterUploadCallback(boost::bind(&LogMonitor::UploadCallback, this, _1, _2));
 
     // Initial day folders
     ScanFiles();
@@ -29,6 +29,8 @@ LogMonitor::LogMonitor(const std::string& logRootDir, int interval, LogUploader&
 LogMonitor::~LogMonitor()
 {
     m_Stop = true;
+
+    m_Connection.disconnect();
 
     m_Thread->join();
 

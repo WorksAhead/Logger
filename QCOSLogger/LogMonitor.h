@@ -3,6 +3,7 @@
 #include <boost/thread.hpp>
 #include <boost/container/deque.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/signals2.hpp>
 
 namespace QCOS
 {
@@ -32,6 +33,7 @@ namespace QCOS
         boost::thread* m_Thread;
 
         LogUploader& m_Uploader;
+        boost::signals2::connection m_Connection;
 
         std::string m_LogRootDir{ "./" };
         int m_Interval{ 6 };

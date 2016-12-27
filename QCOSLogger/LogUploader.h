@@ -10,7 +10,7 @@ namespace QCOS
 {
     class LogUploader
     {
-        typedef boost::signals2::signal<void(const LogFile&, bool result)> UploadSignal;
+        typedef boost::signals2::signal<void(const LogFile&, bool result)> SignalType;
 
     public:
         LogUploader(UploaderBase::UploaderType type);
@@ -18,7 +18,7 @@ namespace QCOS
 
         void UploadLogFile(const LogFile& logFile);
 
-        void RegisterUploadCallback(const boost::function<void(const LogFile&, bool result)>& callback);
+        boost::signals2::connection RegisterUploadCallback(const SignalType::slot_type& subscriber);
 
         void operator()();
 
@@ -35,6 +35,6 @@ namespace QCOS
         boost::container::deque<LogFile> m_UploadFileQueue;
 
         UploaderBase* m_Uploader{ nullptr };
-        UploadSignal m_UploadSignal;
+        SignalType m_UploadSignal;
     };
 }

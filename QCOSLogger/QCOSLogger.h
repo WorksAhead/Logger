@@ -5,6 +5,7 @@
 #include "LogRecorder.h"
 #include "LogUploader.h"
 #include "LogMonitor.h"
+#include "LogDownloader.h"
 
 namespace QCOS
 {
@@ -26,9 +27,14 @@ namespace QCOS
 
         void WriteLog(const std::string& text);
 
+        boost::signals2::connection DownloadLogFiles(const LogDate& fromDate,
+                                                     const LogDate& toDate,
+                               const DownloadSignalType::slot_type& subscriber);
+
     private:
-        LogUploader m_Uploader;
-        LogRecorder m_Recorder;
-        LogMonitor m_Monitor;
+        LogUploader   m_Uploader;
+        LogRecorder   m_Recorder;
+        LogMonitor    m_Monitor;
+        LogDownloader m_Downloader;
     };
 }

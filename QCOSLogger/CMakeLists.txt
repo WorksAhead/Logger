@@ -44,9 +44,11 @@ add_library(QCOSLogger
             LogUploader.h
             COSUploader.cpp
             COSUploader.h
-	    FakeUploader.cpp
+	        FakeUploader.cpp
             FakeUploader.h
             LogMonitor.cpp
-            LogMonitor.h)
+            LogMonitor.h
+			LogDownloader.cpp
+			LogDownloader.h)
 #set_target_properties(QCOSLogger PROPERTIES OUTPUT_NAME_DEBUG QCOSLogger_d)
 target_compile_features(QCOSLogger PRIVATE cxx_generalized_initializers)

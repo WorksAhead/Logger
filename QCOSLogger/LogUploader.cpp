@@ -30,12 +30,12 @@ LogUploader::~LogUploader()
 {
     m_Stop = true;
 
+    m_UploadSignal.disconnect_all_slots();
+
     m_Thread->join();
 
     delete m_Thread;
     delete m_Uploader;
-
-    m_UploadSignal.disconnect_all_slots();
 }
 
 void
@@ -45,10 +45,10 @@ LogUploader::UploadLogFile(const LogFile& logFile)
     m_LogFileQueue.push_back(logFile);
 }
 
-void
-LogUploader::RegisterUploadCallback(const boost::function<void(const LogFile&, bool result)>& callback)
+boost::signals2::connection
+LogUploader::RegisterUploadCallback(const SignalType::slot_type& subscriber)
 {
-    m_UploadSignal.connect(callback);
+    return m_UploadSignal.connect(subscriber);
 }
 
 void
@@ -67,13 +67,14 @@ LogUploader::SyncFiles()
 
     while (!m_UploadFileQueue.empty())
     {
-        LogFile logFile = m_UploadFileQueue.front();
-        m_UploadFileQueue.pop_front();
-
+        LogFile& logFile = m_UploadFileQueue.front();
+        
         bool result = m_Uploader->UploadLogFile(logFile);
 
         // Notify all observers that logFile upload success.
         m_UploadSignal(logFile, result);
+
+        m_UploadFileQueue.pop_front();
     }
 }
 
