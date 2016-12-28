@@ -11,10 +11,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib)
 if(UNIX)
     include_directories(../cos-cpp-sdk-v4/include)
 
-    if(NOT DEFINED BOOST_ROOT)
-        message(FATAL_ERROR "You must specify BOOST_ROOT.")
-    endif()
-
     find_package(Boost
                  1.6.2
                  REQUIRED

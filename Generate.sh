@@ -8,4 +8,4 @@ mkdir -p ./Build/Bin
 cp ./cosconfig.json ./Build/Bin
 
 cd Build
-cmake -DBOOST_ROOT=/usr/local/bin ..
+cmake -DCMAKE_BUILD_TYPE=Release ..

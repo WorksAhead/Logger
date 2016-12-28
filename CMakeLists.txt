@@ -9,10 +9,6 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin)
 
 if(UNIX)
-    if(NOT DEFINED BOOST_ROOT)
-        message(FATAL_ERROR "You must specify BOOST_ROOT.")
-    endif()
-
     find_package(Boost
                  1.6.2
                  REQUIRED
