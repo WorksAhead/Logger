@@ -83,6 +83,10 @@ LogUploader::SyncFiles()
         // Notify all observers that logFile upload success.
         m_UploadSignal(logFile, result);
 
-        m_UploadFileQueue.pop_front();
+        if (result)
+        {
+            m_UploadFileQueue.pop_front();
+        }
     }
 }
+

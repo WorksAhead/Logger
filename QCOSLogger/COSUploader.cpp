@@ -2,6 +2,7 @@
 
 #include "COSUploader.h"
 #include "LogFile.h"
+#include "BoostLogWrapper.h"
 
 #include <boost/thread.hpp>
 
@@ -32,9 +33,16 @@ COSUploader::UploadLogFile(const LogFile& logFile)
 
     FileUploadReq fileUploadReq1(bucket, srcpath, dstpath);
     fileUploadReq1.setInsertOnly(0);
-    m_Cos.FileUpload(fileUploadReq1);
+    std::string result = m_Cos.FileUpload(fileUploadReq1);
+    QCOS_LOG(debug) << "Upload result: " << result;
 
-    return true;
+    Json::Value root_json = StringUtil::StringToJson(result);
+    int code = -1;
+    if (root_json.isMember("code")) {
+        code = root_json["code"].asInt();
+    }
+
+    return code == 0;
 }
 
 #endif

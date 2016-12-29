@@ -146,6 +146,6 @@ LogMonitor::UploadCallback(const LogFile& logFile, bool result)
     else
     {
         QCOS_LOG(warning) << "Log file: " << logFile.FullPathName << " upload failed, try again.";
-        m_Uploader.UploadLogFile(logFile);
+        // m_Uploader.UploadLogFile(logFile);
     }
 }
