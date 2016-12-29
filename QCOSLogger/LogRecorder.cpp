@@ -1,12 +1,11 @@
 #include "LogRecorder.h"
+#include "BoostLogWrapper.h"
 
+#include <boost/lexical_cast.hpp>
 #include <boost/format.hpp> 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
-
-#include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
 
 using namespace QCOS;
 
@@ -14,28 +13,47 @@ using namespace boost::gregorian;
 using namespace boost::posix_time;
 using namespace boost::local_time;
 
-LogRecorder::LogRecorder(const std::string& logRootDir, int interval)
-    : m_LogRootDir{ logRootDir }
-    , m_Interval{ interval }
+LogRecorder::LogRecorder(const std::string& logOutputDir, int logSinkInterval)
+    : m_OutputDir{ logOutputDir }
+    , m_SinkInterval{ logSinkInterval }
 {
-    UpdateLogFile();
-    m_Thread = new boost::thread(boost::ref(*this));
+
 }
 
 LogRecorder::~LogRecorder()
 {
-    m_Stop = true;
 
-    m_Thread->join();
+}
 
-    delete m_Thread;
+void
+LogRecorder::operator()()
+{
+    //InitThread();
+
+    while (!m_Stop)
+    {
+        UpdateLogFile();
+        SinkLogFile();
+
+        if (m_LogRecordQueue.empty())
+        {
+            boost::system_time const timeout = boost::get_system_time() + boost::posix_time::milliseconds(500);
+            m_Thread->sleep(timeout);
+        }
+    }
+
+    SinkLogFile();
+    if (m_FileStream.is_open())
+    {
+        m_FileStream.close();
+    }
 }
 
 void
 LogRecorder::WriteLog(const std::string& text)
 {
     boost::lock_guard<boost::mutex> guard(m_Mutex);
-    m_LogQueue.push_back(text);
+    m_LogRecordQueue.push_back(text);
 }
 
 void
@@ -52,71 +70,51 @@ LogRecorder::UpdateLogFile()
     int minutes = localTime.time_of_day().minutes();
     int seconds = localTime.time_of_day().seconds();
 
-    int recordMinutes = minutes - minutes % (m_Interval / 60);
+    int recordMinutes = minutes - minutes % (m_SinkInterval / 60);
 
     LogFile logFile;
     logFile.DayFolder = boost::str(boost::format("%1%_%2%_%3%") % year % month % day);
     logFile.HourFolder = boost::lexical_cast<std::string>(hours);
     logFile.FileName = boost::str(boost::format("%02d.txt") % recordMinutes);
-    logFile.PathName = boost::str(boost::format("%1%/%2%/%3%") % m_LogRootDir % logFile.DayFolder % logFile.HourFolder);
-    logFile.FullPathName = boost::str(boost::format("%1%/%2%/%3%/%4%") % m_LogRootDir % logFile.DayFolder % logFile.HourFolder % logFile.FileName);
+    logFile.PathName = boost::str(boost::format("%1%/%2%/%3%") % m_OutputDir % logFile.DayFolder % logFile.HourFolder);
+    logFile.FullPathName = boost::str(boost::format("%1%/%2%/%3%/%4%") % m_OutputDir % logFile.DayFolder % logFile.HourFolder % logFile.FileName);
 
-    if (!boost::filesystem::exists(logFile.PathName))
-    {
-        boost::filesystem::create_directories(logFile.PathName);
-    }
-
-    if (logFile != m_LogFile)
+    if (m_LogFile != logFile)
     {
         if (m_FileStream.is_open())
         {
             m_FileStream.close();
         }
 
-        m_LogFile = logFile;
-        m_FileStream.open(m_LogFile.FullPathName, std::ofstream::out | std::ofstream::app);
-    }
-    else
-    {
-        m_FileStream.flush();
+        if (!m_LogRecordQueue.empty())
+        {
+            m_LogFile = logFile;
+
+            if (!boost::filesystem::exists(m_LogFile.PathName))
+            {
+                boost::filesystem::create_directories(m_LogFile.PathName);
+            }
+
+            QCOS_LOG(debug) << "Sink new log file: " << m_LogFile.FullPathName;
+            m_FileStream.open(m_LogFile.FullPathName, std::ofstream::out | std::ofstream::app);
+        }
     }
 }
 
 void
-LogRecorder::SyncFile()
+LogRecorder::SinkLogFile()
 {
+    if (m_FileStream.is_open())
     {
         boost::lock_guard<boost::mutex> guard(m_Mutex);
-        while (!m_LogQueue.empty())
+        while (!m_LogRecordQueue.empty())
         {
-            std::string log = m_LogQueue.front();
-            m_LogQueue.pop_front();
+            std::string log = m_LogRecordQueue.front();
+            m_LogRecordQueue.pop_front();
 
             m_FileStream << log << std::endl;
         }
-    }
 
-    UpdateLogFile();
-}
-
-void
-LogRecorder::operator()()
-{
-    while (!m_Stop)
-    {
-        SyncFile();
-
-        if (m_LogQueue.empty())
-        {
-            boost::system_time const timeout = boost::get_system_time() + boost::posix_time::milliseconds(500);
-            m_Thread->sleep(timeout);
-        }
-    }
-
-    SyncFile();
-    if (m_FileStream.is_open())
-    {
-        m_FileStream.close();
+        m_FileStream.flush();
     }
 }
-

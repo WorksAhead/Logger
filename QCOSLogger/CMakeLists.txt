@@ -20,12 +20,12 @@ endif()
 
 if(WIN32)
     add_compile_options(/wd"4819")
-	# Disable warning C4996: 'std::copy': Function call with parameters that may be unsafe - this call relies on the caller to check that the passed values are correct.
-	# It is nothing to worry about. In the last few releases of MSVC, they've gone into full security-paranoia mode. 
-	# std::copy issues this warning when it is used with raw pointers, because when used incorrectly, it can result in buffer overflows.
+    # Disable warning C4996: 'std::copy': Function call with parameters that may be unsafe - this call relies on the caller to check that the passed values are correct.
+    # It is nothing to worry about. In the last few releases of MSVC, they've gone into full security-paranoia mode. 
+    # std::copy issues this warning when it is used with raw pointers, because when used incorrectly, it can result in buffer overflows.
     # Their iterator implementation performs bounds checking to ensure this doesn't happen, at a significant performance cost.
     # So feel free to ignore the warning. It doesn't mean there's anything wrong with your code. 
-	# It is just saying that if there is something wrong with your code, then bad things will happen. Which is an odd thing to issue warnings about
+    # It is just saying that if there is something wrong with your code, then bad things will happen. Which is an odd thing to issue warnings about
     add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 endif()
 
@@ -45,6 +45,11 @@ add_library(QCOSLogger
             LogMonitor.cpp
             LogMonitor.h
             LogDownloader.cpp
-            LogDownloader.h)
+            LogDownloader.h
+            BoostLogWrapper.cpp
+            BoostLogWrapper.h
+            LogThread.cpp
+            LogThread.h)
+
 #set_target_properties(QCOSLogger PROPERTIES OUTPUT_NAME_DEBUG QCOSLogger_d)
 target_compile_features(QCOSLogger PRIVATE cxx_generalized_initializers)

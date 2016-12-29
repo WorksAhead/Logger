@@ -1,43 +1,42 @@
 #pragma once
 
-#include <boost/thread.hpp>
+#include "LogThread.h"
+
 #include <boost/container/deque.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/signals2.hpp>
 
 namespace QCOS
 {
     class LogFile;
     class LogUploader;
-    class LogMonitor
+    class LogMonitor : public LogThread
     {
     public:
         // Scan file interval in seconds
-        LogMonitor(const std::string& logRootDir, int interval, LogUploader& uploader);
+        LogMonitor(const std::string& monitorDir, int scanInterval, LogUploader& uploader);
         ~LogMonitor();
 
-        void operator()();
+        virtual void operator()();
 
-        //private:
+    private:
         void ScanFiles();
-
         void UploadLogFiles();
 
-        //
         void UploadCallback(const LogFile& logFile, bool result);
 
     private:
-        bool m_Stop{ false };
+        // Log file path for monitor.
+        std::string m_MonitorDir;
+        // Monitor scan interval, in seconds.
+        int m_ScanInterval{ 6 };
 
-        boost::mutex m_Mutex;
-        boost::thread* m_Thread;
-
+        // Log file uploader.
         LogUploader& m_Uploader;
-        boost::signals2::connection m_Connection;
 
-        std::string m_LogRootDir{ "./" };
-        int m_Interval{ 6 };
-
+        // Log files that is waiting for upload.
         boost::container::deque<LogFile> m_LogFileQueue;
+
+        // Upload callback signal connection.
+        boost::signals2::connection m_Connection;
     };
 }

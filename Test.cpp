@@ -1,7 +1,5 @@
 #include "QCOSLogger.h"
 
-#include "LogMonitor.h"
-
 using namespace QCOS;
 
 class test
@@ -13,9 +11,14 @@ public:
     }
 };
 
+
+
 int main()
 {
     QCOSLogger logger;
+
+    /*
+    return 0;
 
     LogDate fromDate;
     fromDate.Day = "2016_12_26";
@@ -29,11 +32,7 @@ int main()
     test t;
 
     logger.DownloadLogFiles(fromDate, toDate, boost::bind(&test::my, &t, _1));
-
-
-    //LogUploader uploader;
-    //LogMonitor fileMonitor("./LogFiles", 1, uploader);
-    //fileMonitor.ScanFiles();
+    */
 
     while (1)
     {

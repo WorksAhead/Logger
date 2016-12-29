@@ -9,6 +9,10 @@ namespace QCOS
         ~FakeUploader() {}
 
         virtual bool UploadLogFile(const LogFile& logFile);
+
+        virtual std::string GetTypeName()
+        {
+            return "FakeUploader";
+        }
     };
 }
-#pragma once

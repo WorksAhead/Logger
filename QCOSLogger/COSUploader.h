@@ -13,6 +13,11 @@ namespace QCOS
 
         virtual bool UploadLogFile(const LogFile& logFile);
 
+        virtual std::string GetTypeName()
+        {
+            return "COSUploader";
+        }
+
     private:
         qcloud_cos::CosConfig m_CosConfig{ "cosconfig.json" };
         qcloud_cos::CosAPI m_Cos{ m_CosConfig };

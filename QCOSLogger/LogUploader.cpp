@@ -6,9 +6,9 @@
 
 using namespace QCOS;
 
-LogUploader::LogUploader(UploaderBase::UploaderType type)
+LogUploader::LogUploader(UploaderBase::UploaderType uploaderType)
 {
-    switch (type)
+    switch (uploaderType)
     {
 #if defined(__linux__)
     case UploaderBase::UPLOADER_TYPE_COS:
@@ -22,20 +22,35 @@ LogUploader::LogUploader(UploaderBase::UploaderType type)
         m_Uploader = new FakeUploader();
         break;
     }
-
-    m_Thread = new boost::thread(boost::ref(*this));
 }
 
 LogUploader::~LogUploader()
 {
-    m_Stop = true;
-
     m_UploadSignal.disconnect_all_slots();
-
-    m_Thread->join();
-
-    delete m_Thread;
     delete m_Uploader;
+}
+
+void
+LogUploader::operator()()
+{
+    //InitThread();
+
+    while (!m_Stop)
+    {
+        SyncFiles();
+    }
+
+    // Flush log files.
+    if (m_LogFileQueue.size() > 0)
+    {
+        SyncFiles();
+    }
+}
+
+boost::signals2::connection
+LogUploader::RegisterUploadCallback(const SignalType::slot_type& subscriber)
+{
+    return m_UploadSignal.connect(subscriber);
 }
 
 void
@@ -43,12 +58,6 @@ LogUploader::UploadLogFile(const LogFile& logFile)
 {
     boost::lock_guard<boost::mutex> guard(m_Mutex);
     m_LogFileQueue.push_back(logFile);
-}
-
-boost::signals2::connection
-LogUploader::RegisterUploadCallback(const SignalType::slot_type& subscriber)
-{
-    return m_UploadSignal.connect(subscriber);
 }
 
 void
@@ -75,20 +84,5 @@ LogUploader::SyncFiles()
         m_UploadSignal(logFile, result);
 
         m_UploadFileQueue.pop_front();
-    }
-}
-
-void
-LogUploader::operator()()
-{
-    while (!m_Stop)
-    {
-        SyncFiles();
-    }
-
-    // Flush log files.
-    if (m_LogFileQueue.size() > 0)
-    {
-        SyncFiles();
     }
 }

@@ -32,5 +32,6 @@ add_subdirectory(./QCOSLogger)
 include_directories(./QCOSLogger)
 
 add_executable(COSTest Test.cpp)
+
 target_link_libraries(COSTest QCOSLogger ${COS_LIBRARIES} ${Boost_LIBRARIES})
 target_compile_features(COSTest PRIVATE cxx_generalized_initializers)

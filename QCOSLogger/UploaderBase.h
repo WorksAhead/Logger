@@ -18,5 +18,7 @@ namespace QCOS
         virtual ~UploaderBase() {};
 
         virtual bool UploadLogFile(const LogFile& logFile) = 0;
+
+        virtual std::string GetTypeName() = 0;
     };
 }

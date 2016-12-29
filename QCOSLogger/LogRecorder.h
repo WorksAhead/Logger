@@ -1,44 +1,39 @@
 #pragma once
+
+#include "LogThread.h"
 #include "LogFile.h"
 
-#include <string>
-
-#include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/container/deque.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 namespace QCOS
 {
-    class LogRecorder
+    class LogRecorder : public LogThread
     {
     public:
-        // Log record interval, in seconds.
-        LogRecorder(const std::string& logRootDir, int interval);
+        LogRecorder(const std::string& logOutputDir, int logSinkInterval);
         ~LogRecorder();
+
+        virtual void operator()();
 
         void WriteLog(const std::string& text);
 
-        void operator()();
-
     private:
         void UpdateLogFile();
-        void SyncFile();
+        void SinkLogFile();
 
     private:
-        std::string m_LogRootDir;
-
-        bool m_Stop{ false };
-        // Record interval in seconds.
-        int m_Interval{ 300 };
-
-        boost::mutex m_Mutex;
-        boost::thread* m_Thread{ nullptr };
+        // Log file's output path.
+        std::string m_OutputDir;
+        // Log record's sink interval, in seconds.
+        int m_SinkInterval{ 300 };
 
         // Current logging file.
         LogFile m_LogFile;
-        // Current logginf file stream.
+        // Current logging file stream.
         boost::filesystem::ofstream m_FileStream;
 
-        boost::container::deque<std::string> m_LogQueue;
+        // Log records that is ready to sink to log file.
+        boost::container::deque<std::string> m_LogRecordQueue;
     };
 }

@@ -1,6 +1,5 @@
 #include "FakeUploader.h"
-#include "LogFile.h"
-
+#include "BoostLogWrapper.h"
 #include <boost/thread.hpp>
 
 using namespace QCOS;
@@ -8,9 +7,9 @@ using namespace QCOS;
 bool
 FakeUploader::UploadLogFile(const LogFile& logFile)
 {
-    std::cout << "Start upload file " << logFile.FullPathName << std::endl;
+    QCOS_LOG(debug) << "Start upload file " << logFile.FullPathName;
     boost::this_thread::sleep_for(boost::chrono::seconds(5));
-    std::cout << "Upload finished." << std::endl;
+    QCOS_LOG(debug) << "Upload finished.";
 
     return true;
 }
