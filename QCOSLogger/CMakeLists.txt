@@ -14,7 +14,7 @@ if(UNIX)
     find_package(Boost
                  1.6.2
                  REQUIRED
-                 COMPONENTS filesystem thread system)
+                 COMPONENTS log filesystem thread system)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 

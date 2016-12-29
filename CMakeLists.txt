@@ -12,8 +12,10 @@ if(UNIX)
     find_package(Boost
                  1.6.2
                  REQUIRED
-                 COMPONENTS filesystem thread system)
+                 COMPONENTS log filesystem thread system)
     include_directories(${Boost_INCLUDE_DIRS})
+
+    set(CMAKE_CXX_FLAGS -DBOOST_LOG_DYN_LINK)
 
     add_subdirectory(./cos-cpp-sdk-v4/src)
 
