@@ -1,4 +1,5 @@
 #include "QCOSLogger.h"
+#include "BoostLogWrapper.h"
 
 using namespace QCOS;
 
@@ -15,6 +16,8 @@ public:
 
 int main()
 {
+    InitBoostLog("COSTest.log");
+
     QCOSLogger logger;
 
     /*
