@@ -58,20 +58,22 @@ inline void InitBoostLog(const std::string& logFileName, bool runAsDaemon = fals
         << ':' << expr::attr<int>("Line") << "] "
         << expr::smessage;
 
+    logging::add_common_attributes();
+
     if (runAsDaemon)
     {
         auto fileSink = logging::add_file_log(
             keywords::file_name = logFileName
         );
         fileSink->set_formatter(formatter);
+        logging::core::get()->add_sink(fileSink);
     }
     else
     {
         auto consoleSink = logging::add_console_log();
         consoleSink->set_formatter(formatter);
+        logging::core::get()->add_sink(consoleSink);
     }
-
-    logging::add_common_attributes();
 
 #if defined(NDEBUG)
     logging::core::get()->set_filter
