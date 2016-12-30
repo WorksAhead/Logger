@@ -42,10 +42,15 @@ add_library(QCOSLogger
             COSUploader.h
             FakeUploader.cpp
             FakeUploader.h
-            LogMonitor.cpp
-            LogMonitor.h
+            DownloaderBase.h
             LogDownloader.cpp
             LogDownloader.h
+            COSDownloader.cpp
+            COSDownloader.h
+            FakeDownloader.cpp
+            FakeDownloader.h
+            LogMonitor.cpp
+            LogMonitor.h
             BoostLogWrapper.cpp
             BoostLogWrapper.h
             LogThread.cpp
