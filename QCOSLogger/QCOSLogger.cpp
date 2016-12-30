@@ -4,10 +4,15 @@
 
 using namespace QCOS;
 
-QCOSLogger::QCOSLogger(const std::string logRootDir, int interval, UploaderBase::UploaderType uploaderType)
+QCOSLogger::QCOSLogger(const std::string& logOutputDir,
+                                      int logSinkInterval,
+               UploaderBase::UploaderType uploaderType,
+                       const std::string& downloadDir,
+           DownloaderBase::DownloaderType downloaderType)
     : m_Uploader{ uploaderType }
-    , m_Recorder{ boost::filesystem::path(logRootDir).generic_string(), interval }
-    , m_Monitor{ boost::filesystem::path(logRootDir).generic_string(), interval, m_Uploader }
+    , m_Downloader{ downloadDir, downloaderType }
+    , m_Recorder{ boost::filesystem::path(logOutputDir).generic_string(), logSinkInterval }
+    , m_Monitor{ boost::filesystem::path(logOutputDir).generic_string(), logSinkInterval, m_Uploader }
 {
 
 }

@@ -1,26 +1,53 @@
 #include "LogDownloader.h"
+#if defined(__linux__)
+#include "COSDownloader.h"
+#endif
+#include "FakeDownloader.h"
 
-#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp> 
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/format.hpp>
-#include <boost/algorithm/string.hpp>
-
-using namespace boost::gregorian;
 
 using namespace QCOS;
+using namespace boost::gregorian;
 
-LogDownloader::LogDownloader()
+LogDownloader::LogDownloader(const std::string& downloadDir, DownloaderBase::DownloaderType downloaderType)
+    : m_DownloadDir{ downloadDir }
 {
-    m_Thread = new boost::thread(boost::ref(*this));
+    switch (downloaderType)
+    {
+#if defined(__linux__)
+    case DownloaderBase::DOWNLOADER_TYPE_COS:
+        m_Downloader = new COSDownloader();
+        break;
+#endif
+    case DownloaderBase::DOWNLOADER_TYPE_FAKE:
+        m_Downloader = new FakeDownloader();
+        break;
+    default:
+        m_Downloader = new FakeDownloader();
+        break;
+    }
 }
 
 LogDownloader::~LogDownloader()
 {
-    m_Stop = true;
+    m_DownloadSignal.disconnect_all_slots();
+    delete m_Downloader;
+}
 
-    m_Thread->join();
+void
+LogDownloader::operator()()
+{
+    while (!m_Stop)
+    {
+        DownloadFiles();
+    }
 
-    delete m_Thread;
+    // Flush log files.
+    if (m_DownloadRequestQueue.size() > 0)
+    {
+        DownloadFiles();
+    }
 }
 
 boost::signals2::connection
@@ -62,12 +89,28 @@ LogDownloader::DownloadFiles()
         {
             std::cout << "Download: " << logDate.Day << "/" << logDate.Hour << "/" << logDate.Minute << ".txt" << std::endl;
             downloadReq->From = logDate;
-        }
-        //bool result = m_Uploader->UploadLogFile(logFile);
 
-        // Notify all observers that logFile upload success.
-        // download.Signal();
-        m_DownloadQueue.pop_front();
+            LogFile logFile;
+            logFile.DayFolder = logDate.Day;
+            logFile.HourFolder = logDate.Hour;
+            logFile.FileName = boost::str(boost::format("%1%.txt") % logDate.Minute);
+            logFile.PathName = boost::str(boost::format("%1%/%2%/%3%") % m_DownloadDir % logFile.DayFolder % logFile.HourFolder);
+            logFile.FullPathName = boost::str(boost::format("%1%/%2%/%3%/%4%") % m_DownloadDir % logFile.DayFolder % logFile.HourFolder % logFile.FileName);
+
+            RETRY:
+            bool result = m_Downloader->DownloadLogFile(logFile);
+
+            m_DownloadSignal(logFile, result);
+
+            if (result)
+            {
+                m_DownloadQueue.pop_front();
+            }
+            else
+            {
+                goto RETRY;
+            }
+        }
     }
 }
 
@@ -108,19 +151,4 @@ LogDownloader::GetNextLogDate(const LogDate& fromDate, const LogDate& toDate, Lo
     }
 
     return true;
-}
-
-void
-LogDownloader::operator()()
-{
-    while (!m_Stop)
-    {
-        DownloadFiles();
-    }
-
-    // Flush log files.
-    if (m_DownloadRequestQueue.size() > 0)
-    {
-        DownloadFiles();
-    }
 }

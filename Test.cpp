@@ -97,7 +97,7 @@ int main(int ac, char* av[])
 
     InitBoostLog("COSTest.log", runAsDaemon);
 
-    QCOSLogger logger;
+    QCOSLogger logger("./LogFiles", 60, DEFAULT_UPLOADER, "./LogDownloadFiles", DEFAULT_DOWNLOADER);
 
     /*
     return 0;
