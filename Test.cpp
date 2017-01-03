@@ -1,7 +1,13 @@
 #include "QCOSLogger.h"
 #include "BoostLogWrapper.h"
 #if defined (__linux__)
-#include <boost/program_options.hpp>
+# include <unistd.h>
+# include <errno.h>
+# include <sys/wait.h>
+# include <sys/stat.h>
+# include <fcntl.h>
+
+# include <boost/program_options.hpp>
 namespace po = boost::program_options;
 #endif
 
