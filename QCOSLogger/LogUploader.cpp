@@ -33,8 +33,6 @@ LogUploader::~LogUploader()
 void
 LogUploader::operator()()
 {
-    //InitThread();
-
     while (!m_Stop)
     {
         SyncFiles();

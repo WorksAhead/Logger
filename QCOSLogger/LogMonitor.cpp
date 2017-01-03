@@ -31,8 +31,6 @@ LogMonitor::~LogMonitor()
 void
 LogMonitor::operator()()
 {
-    //InitThread();
-
     while (!m_Stop)
     {
         if (m_LogFileQueue.size() < 2)

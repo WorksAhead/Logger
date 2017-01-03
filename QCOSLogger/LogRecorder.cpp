@@ -28,8 +28,6 @@ LogRecorder::~LogRecorder()
 void
 LogRecorder::operator()()
 {
-    //InitThread();
-
     while (!m_Stop)
     {
         UpdateLogFile();
