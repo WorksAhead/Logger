@@ -1,19 +1,11 @@
 #include "QCOSLogger.h"
 #include "BoostLogWrapper.h"
-
+#if defined (__linux__)
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
+#endif
 
 using namespace QCOS;
-
-class test
-{
-public:
-    void my(std::vector<LogFile>&)
-    {
-
-    }
-};
 
 int Daemonize(const char* name)
 {
@@ -98,23 +90,6 @@ int main(int ac, char* av[])
     InitBoostLog("COSTest.log", runAsDaemon);
 
     QCOSLogger logger("./LogFiles", 60, DEFAULT_UPLOADER, "./LogDownloadFiles", DEFAULT_DOWNLOADER);
-
-    /*
-    return 0;
-
-    LogDate fromDate;
-    fromDate.Day = "2016_12_26";
-    fromDate.Hour = "00";
-    fromDate.Minute = "00";
-    LogDate toDate;
-    toDate.Day = "2016_12_27";
-    toDate.Hour = "15";
-    toDate.Minute = "58";
-
-    test t;
-
-    logger.DownloadLogFiles(fromDate, toDate, boost::bind(&test::my, &t, _1));
-    */
 
     while (1)
     {

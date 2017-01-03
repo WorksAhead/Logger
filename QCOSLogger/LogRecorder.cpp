@@ -73,8 +73,8 @@ LogRecorder::UpdateLogFile()
     int recordMinutes = minutes - minutes % (m_SinkInterval / 60);
 
     LogFile logFile;
-    logFile.DayFolder = boost::str(boost::format("%1%_%2%_%3%") % year % month % day);
-    logFile.HourFolder = boost::lexical_cast<std::string>(hours);
+    logFile.DayFolder = boost::str(boost::format("%1$04d_%2$02d_%3$02d") % year % month % day);
+    logFile.HourFolder = boost::str(boost::format("%1$02d") % hours);//boost::lexical_cast<std::string>(hours);
     logFile.FileName = boost::str(boost::format("%02d.txt") % recordMinutes);
     logFile.PathName = boost::str(boost::format("%1%/%2%/%3%") % m_OutputDir % logFile.DayFolder % logFile.HourFolder);
     logFile.FullPathName = boost::str(boost::format("%1%/%2%/%3%/%4%") % m_OutputDir % logFile.DayFolder % logFile.HourFolder % logFile.FileName);
