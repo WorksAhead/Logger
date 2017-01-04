@@ -5,10 +5,10 @@
 #include "FakeDownloader.h"
 
 #include <boost/format.hpp> 
-#include <boost/date_time/gregorian/gregorian.hpp>
 
 using namespace QCOS;
 using namespace boost::gregorian;
+using namespace boost::posix_time;
 
 LogDownloader::LogDownloader(const std::string& downloadDir, DownloaderBase::DownloaderType downloaderType)
     : m_DownloadDir{ downloadDir }
@@ -31,7 +31,6 @@ LogDownloader::LogDownloader(const std::string& downloadDir, DownloaderBase::Dow
 
 LogDownloader::~LogDownloader()
 {
-    m_DownloadSignal.disconnect_all_slots();
     delete m_Downloader;
 }
 
@@ -40,39 +39,47 @@ LogDownloader::operator()()
 {
     while (!m_Stop)
     {
-        DownloadFiles();
+        SyncFiles();
     }
 
     // Flush log files.
-    if (m_DownloadRequestQueue.size() > 0)
+    if (m_SessionFrontQueue.size() > 0)
     {
-        DownloadFiles();
+        SyncFiles();
     }
 }
 
-boost::signals2::connection
-LogDownloader::Download(const LogDate& fromDate,
-                        const LogDate& toDate,
-  const DownloadSignalType::slot_type& subscriber)
+void
+LogDownloader::DownloadLogFiles(const std::string& fromTimeStr, const std::string& toTimeStr, int interval, DownloadCallback callback)
 {
+    boost::shared_ptr<DownloadSession> downloadReq = boost::make_shared<DownloadSession>();
+    downloadReq->Callback = callback;
+
+    ptime from(time_from_string(fromTimeStr));
+    ptime to(time_from_string(toTimeStr));
+
+    time_iterator titr(from, minutes(interval));
+
     boost::lock_guard<boost::mutex> guard(m_Mutex);
 
-    boost::shared_ptr<DownloadRequest> request(new DownloadRequest);
-    request->From = fromDate;
-    request->To = toDate;
-    boost::signals2::connection conn = request->Signal.connect(subscriber);
-    m_DownloadRequestQueue.push_back(request);
+    while (titr <= to)
+    {
+        ptime& pt = *titr;
+        std::string cosPathName = GetCOSPathName(pt);
+        downloadReq->RequestPathQueue.push_back(cosPathName);
+        ++titr;
+    }
 
-    return conn;
+    m_SessionFrontQueue.push_back(downloadReq);
 }
 
 void
-LogDownloader::DownloadFiles()
+LogDownloader::SyncFiles()
 {
-    if (m_DownloadRequestQueue.size() > 0)
+    if (m_SessionFrontQueue.size() > 0)
     {
         boost::lock_guard<boost::mutex> guard(m_Mutex);
-        m_DownloadQueue.swap(m_DownloadRequestQueue);
+        m_SessionBackQueue.swap(m_SessionFrontQueue);
     }
     else
     {
@@ -80,75 +87,40 @@ LogDownloader::DownloadFiles()
         m_Thread->sleep(timeout);
     }
 
-    while (!m_DownloadQueue.empty())
+    while (!m_SessionBackQueue.empty())
     {
-        boost::shared_ptr<DownloadRequest> downloadReq = m_DownloadQueue.front();
-        
-        LogDate logDate;
-        while (GetNextLogDate(downloadReq->From, downloadReq->To, logDate, 1))
+        boost::shared_ptr<DownloadSession> downloadReq = m_SessionBackQueue.front();
+        while (!downloadReq->RequestPathQueue.empty())
         {
-            std::cout << "Download: " << logDate.Day << "/" << logDate.Hour << "/" << logDate.Minute << ".txt" << std::endl;
-            downloadReq->From = logDate;
+            std::string& cosPathName = downloadReq->RequestPathQueue.front();
 
-            LogFile logFile;
-            logFile.DayFolder = logDate.Day;
-            logFile.HourFolder = logDate.Hour;
-            logFile.FileName = boost::str(boost::format("%1%.txt") % logDate.Minute);
-            logFile.PathName = boost::str(boost::format("%1%/%2%/%3%") % m_DownloadDir % logFile.DayFolder % logFile.HourFolder);
-            logFile.FullPathName = boost::str(boost::format("%1%/%2%/%3%/%4%") % m_DownloadDir % logFile.DayFolder % logFile.HourFolder % logFile.FileName);
-
-            RETRY:
-            bool result = m_Downloader->DownloadLogFile(logFile);
-
-            m_DownloadSignal(logFile, result);
+            bool result = m_Downloader->DownloadLogFile(cosPathName);
 
             if (result)
             {
-                m_DownloadQueue.pop_front();
-            }
-            else
-            {
-                goto RETRY;
+                std::string localLogPath = boost::str(boost::format("%1%%2%") % m_DownloadDir % cosPathName);
+                downloadReq->ResponsePathQueue.push_back(localLogPath);
+                downloadReq->RequestPathQueue.pop_front();
             }
         }
+
+        downloadReq->Callback(downloadReq->ResponsePathQueue);
+        m_SessionBackQueue.pop_front();
     }
 }
 
-bool
-LogDownloader::GetNextLogDate(const LogDate& fromDate, const LogDate& toDate, LogDate& nextDate, int interval)
+std::string
+LogDownloader::GetCOSPathName(const ptime& pt)
 {
-    int newMin = boost::lexical_cast<int>(fromDate.Minute);
-    newMin += interval;
+    int year = pt.date().year();
+    int month = pt.date().month();
+    int day = pt.date().day();
+    int hours = pt.time_of_day().hours();
+    int minutes = pt.time_of_day().minutes();
 
-    int newHour = boost::lexical_cast<int>(fromDate.Hour);
-    if (newMin >= 60)
-    {
-        newHour++;
-        newMin -= 60;
-    }
-
-    std::string dayStr = boost::replace_all_copy(fromDate.Day, "_", "/");
-
-    date newDay = from_string(dayStr);
-    if (newHour >= 24)
-    {
-        date_duration day(1);
-        newDay += day;
-        newHour -= 24;
-    }
-
-    int year = newDay.year();
-    int month = newDay.month();
-    int day = newDay.day();
-
-    nextDate.Day = boost::str(boost::format("%1%_%2%_%3%") % year % month % day);
-    nextDate.Hour = boost::lexical_cast<std::string>(newHour);
-    nextDate.Minute = boost::lexical_cast<std::string>(newMin);
-
-    if (toDate == nextDate)
-    {
-        return false;
-    }
-
-    return true;
+    std::string dayFolder = boost::str(boost::format("%1$04d_%2$02d_%3$02d") % year % month % day);
+    std::string hourFolder = boost::str(boost::format("%1$02d") % hours);
+    std::string fileName = boost::str(boost::format("%02d.txt") % minutes);
+    
+    return boost::str(boost::format("/%1%/%2%/%3%") % dayFolder % hourFolder % fileName);
 }

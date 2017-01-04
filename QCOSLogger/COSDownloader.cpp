@@ -3,7 +3,7 @@
 using namespace QCOS;
 
 bool
-COSDownloader::DownloadLogFile(const LogFile& logFile)
+COSDownloader::DownloadLogFile(const std::string& cosPathName)
 {
     return true;
 }

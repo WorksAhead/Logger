@@ -1,6 +1,5 @@
 #pragma once
-
-#include "LogFile.h"
+#include <string>
 
 namespace QCOS
 {
@@ -17,7 +16,7 @@ namespace QCOS
 
         virtual ~DownloaderBase() {};
 
-        virtual bool DownloadLogFile(const LogFile& logFile) = 0;
+        virtual bool DownloadLogFile(const std::string& cosPathName) = 0;
 
         virtual std::string GetTypeName() = 0;
     };

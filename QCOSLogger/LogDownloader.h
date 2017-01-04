@@ -3,46 +3,24 @@
 #include "DownloaderBase.h"
 #include "LogThread.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/container/deque.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/signals2.hpp>
 
 namespace QCOS
 {
-    class LogFile;
+    typedef boost::function<void(boost::container::deque<std::string>&)> DownloadCallback;
 
-    typedef boost::signals2::signal<void(std::vector<LogFile>&)> DownloadSignalType;
-
-    struct LogDate
+    struct DownloadSession
     {
-        std::string Day;
-        std::string Hour;
-        std::string Minute;
-
-        bool operator==(const LogDate& rhs) const
-        {
-            if (Day == rhs.Day &&
-                Hour == rhs.Hour &&
-                Minute == rhs.Minute)
-            {
-                return true;
-            }
-
-            return false;
-        }
-    };
-
-    struct DownloadRequest
-    {
-        LogDate From;
-        LogDate To;
-        DownloadSignalType Signal;
+        boost::container::deque<std::string> RequestPathQueue;
+        boost::container::deque<std::string> ResponsePathQueue;
+        DownloadCallback Callback;
     };
 
     class LogDownloader : public LogThread
     {
-        typedef boost::signals2::signal<void(const LogFile&, bool result)> SignalType;
-
     public:
         // Scan file interval in seconds
         LogDownloader(const std::string& downloadDir, DownloaderBase::DownloaderType downloaderType);
@@ -50,26 +28,19 @@ namespace QCOS
 
         virtual void operator()();
 
-        boost::signals2::connection Download(const LogDate& fromDate,
-                                             const LogDate& toDate,
-                       const DownloadSignalType::slot_type& subscriber);
+        // Post full path log file name to downloader thread.
+        void DownloadLogFiles(const std::string& fromTimeStr, const std::string& toTimeStr, int interval, DownloadCallback callback);
 
     private:
-        void DownloadFiles();
+        void SyncFiles();
 
-        // get date between fromDate and toDate, exclude them.
-        // interval is minute.
-        bool GetNextLogDate(const LogDate& fromDate, 
-                            const LogDate& toDate, 
-                                  LogDate& nextDate, 
-                                       int interval);
+        std::string GetCOSPathName(const boost::posix_time::ptime& pt);
 
     private:
         std::string m_DownloadDir;
         DownloaderBase* m_Downloader{ nullptr };
-        SignalType m_DownloadSignal;
 
-        boost::container::deque<boost::shared_ptr<DownloadRequest> > m_DownloadRequestQueue;
-        boost::container::deque<boost::shared_ptr<DownloadRequest> > m_DownloadQueue;
+        boost::container::deque<boost::shared_ptr<DownloadSession> > m_SessionFrontQueue;
+        boost::container::deque<boost::shared_ptr<DownloadSession> > m_SessionBackQueue;
     };
 }

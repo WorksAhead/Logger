@@ -8,7 +8,7 @@ namespace QCOS
     public:
         ~COSDownloader() {}
 
-        virtual bool DownloadLogFile(const LogFile& logFile);
+        virtual bool DownloadLogFile(const std::string& cosPathName);
 
         virtual std::string GetTypeName()
         {

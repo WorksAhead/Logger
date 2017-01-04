@@ -31,9 +31,7 @@ namespace QCOS
 
         void WriteLog(const std::string& text);
 
-        boost::signals2::connection DownloadLogFiles(const LogDate& fromDate,
-                                                     const LogDate& toDate,
-                               const DownloadSignalType::slot_type& subscriber);
+        void DownloadLogFiles(const std::string& fromTimeStr, const std::string& toTimeStr, int interval, DownloadCallback callback);
 
     private:
         LogUploader   m_Uploader;

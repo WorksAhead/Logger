@@ -23,10 +23,8 @@ QCOSLogger::WriteLog(const std::string& text)
     m_Recorder.WriteLog(text);
 }
 
-boost::signals2::connection
-QCOSLogger::DownloadLogFiles(const LogDate& fromDate,
-                             const LogDate& toDate,
-       const DownloadSignalType::slot_type& subscriber)
+void
+QCOSLogger::DownloadLogFiles(const std::string& fromTimeStr, const std::string& toTimeStr, int interval, DownloadCallback callback)
 {
-    return m_Downloader.Download(fromDate, toDate, subscriber);
+    m_Downloader.DownloadLogFiles(fromTimeStr, toTimeStr, interval, callback);
 }

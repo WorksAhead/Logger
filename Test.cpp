@@ -1,5 +1,3 @@
-#include "QCOSLogger.h"
-#include "BoostLogWrapper.h"
 #if defined (__linux__)
 # include <unistd.h>
 # include <errno.h>
@@ -11,7 +9,50 @@
 namespace po = boost::program_options;
 #endif
 
+#include "QCOSLogger.h"
+#include "BoostLogWrapper.h"
+
+#include <iostream>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/foreach.hpp>
+
 using namespace QCOS;
+
+void DownloadCB(boost::container::deque<std::string>& localLogPathQueue)
+{
+    QCOS_LOG(debug) << "**********************************";
+    BOOST_FOREACH(std::string& logFilePath, localLogPathQueue)
+    {
+        QCOS_LOG(debug) << logFilePath;
+    }
+    QCOS_LOG(debug) << "**********************************";
+}
+
+void WriteLog(const boost::system::error_code&, boost::asio::deadline_timer* t, QCOSLogger* logger)
+{
+    logger->WriteLog("LDAP://10.1.0.11/OU=Users,OU=Managed,DC=cyou-inc,DC=com");
+
+    // Wait again.
+    t->expires_at(t->expires_at() + boost::posix_time::seconds(1));
+    t->async_wait(boost::bind(WriteLog,
+        boost::asio::placeholders::error, t, logger));
+}
+
+void Download(const boost::system::error_code&, boost::asio::deadline_timer* t, QCOSLogger* logger)
+{
+    QCOS_LOG(debug) << "It's time to download log files.";
+
+    logger->DownloadLogFiles("2017-01-04 13:00:00", "2017-01-04 14:00:00", 1, &DownloadCB);
+
+    // Download again.
+    /*
+    t->expires_at(t->expires_at() + boost::posix_time::seconds(10));
+    t->async_wait(boost::bind(Download,
+        boost::asio::placeholders::error, t, logger));
+    */
+}
 
 int Daemonize(const char* name)
 {
@@ -97,11 +138,15 @@ int main(int ac, char* av[])
 
     QCOSLogger logger("./LogFiles", 60, DEFAULT_UPLOADER, "./LogDownloadFiles", DEFAULT_DOWNLOADER);
 
-    while (1)
-    {
-        logger.WriteLog("LDAP://10.1.0.11/OU=Users,OU=Managed,DC=cyou-inc,DC=com");
-        boost::this_thread::sleep_for(boost::chrono::seconds(1));
-    }
+    boost::asio::io_service io;
+    
+    boost::asio::deadline_timer writeLogTimer(io, boost::posix_time::seconds(1));
+    writeLogTimer.async_wait(boost::bind(WriteLog, boost::asio::placeholders::error, &writeLogTimer, &logger));
+
+    boost::asio::deadline_timer downloadTimer(io, boost::posix_time::seconds(10));
+    downloadTimer.async_wait(boost::bind(Download, boost::asio::placeholders::error, &downloadTimer, &logger));
+
+    io.run();
 
     return 0;
 }
