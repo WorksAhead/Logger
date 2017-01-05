@@ -50,8 +50,8 @@ COSDownloader::DownloadLogFile(const std::string& cosPathName, const std::string
 
         FileDownloadReq fileDownloadReq(bucket, dstpath);
         boost::scoped_array<char> buf(new (nothrow) char[fileSize]);
-	int ret_code;
-	size_t size = m_Cos.FileDownload(fileDownloadReq, buf.get(), fileSize, 0, &ret_code);
+        int ret_code;
+        size_t size = m_Cos.FileDownload(fileDownloadReq, buf.get(), fileSize, 0, &ret_code);
 
         if (ret_code != 0)
         {
