@@ -64,7 +64,7 @@ LogDownloader::DownloadLogFiles(const std::string& fromTimeStr, const std::strin
 
     while (titr <= to)
     {
-        ptime& pt = *titr;
+        const ptime& pt = *titr;
         std::string cosPathName = GetCOSPathName(pt);
         downloadReq->RequestPathQueue.push_back(cosPathName);
         ++titr;
@@ -124,3 +124,4 @@ LogDownloader::GetCOSPathName(const ptime& pt)
     
     return boost::str(boost::format("/%1%/%2%/%3%") % dayFolder % hourFolder % fileName);
 }
+
