@@ -115,20 +115,26 @@ int main(int ac, char* av[])
     bool runAsDaemon = false;
 
 #if defined (__linux__)
-    po::options_description desc("Generic options");
+    po::options_description desc("Allowed options");
     desc.add_options()
+        ("help", "Produce help message")
         ("daemon,d", "Running as a daemon process.")
         ;
-
-    po::options_description cmdline_options;
-    cmdline_options.add(desc);
 
     po::variables_map vm;
     po::store(po::parse_command_line(ac, av, desc), vm);
     po::notify(vm);
 
+    if (vm.count("help"))
+    {
+        std::cout << "Usage: COSTest [options]" << std::endl;
+        std::cout << desc << std::endl;
+        return 0;
+    }
+
     if (vm.count("daemon"))
     {
+        std::cout << "Process is running as a daemon." << std::endl;
         runAsDaemon = true;
         Daemonize("QCOSTest");
     }
