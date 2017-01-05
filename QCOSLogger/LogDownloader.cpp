@@ -93,13 +93,20 @@ LogDownloader::SyncFiles()
         while (!downloadReq->RequestPathQueue.empty())
         {
             std::string& cosPathName = downloadReq->RequestPathQueue.front();
+            std::string localPathName = boost::str(boost::format("%1%%2%") % m_DownloadDir % cosPathName);
+            std::string savePath = ExtractPath(localPathName);
 
-            bool result = m_Downloader->DownloadLogFile(cosPathName);
+            if (!boost::filesystem::exists(savePath))
+            {
+                boost::filesystem::create_directories(savePath);
+            }
+
+            bool result = m_Downloader->DownloadLogFile(cosPathName, localPathName);
 
             if (result)
             {
-                std::string localLogPath = boost::str(boost::format("%1%%2%") % m_DownloadDir % cosPathName);
-                downloadReq->ResponsePathQueue.push_back(localLogPath);
+                
+                downloadReq->ResponsePathQueue.push_back(localPathName);
                 downloadReq->RequestPathQueue.pop_front();
             }
         }
@@ -125,3 +132,9 @@ LogDownloader::GetCOSPathName(const ptime& pt)
     return boost::str(boost::format("/%1%/%2%/%3%") % dayFolder % hourFolder % fileName);
 }
 
+std::string
+LogDownloader::ExtractPath(const std::string& fullPathName)
+{
+    size_t pos = fullPathName.find_last_of("/");
+    return fullPathName.substr(0, pos);
+}

@@ -8,7 +8,7 @@ namespace QCOS
     public:
         ~FakeDownloader() {}
 
-        virtual bool DownloadLogFile(const std::string& cosPathName);
+        virtual bool DownloadLogFile(const std::string& cosPathName, const std::string& localPathName);
 
         virtual std::string GetTypeName()
         {

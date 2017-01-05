@@ -16,7 +16,7 @@ namespace QCOS
 
         virtual ~DownloaderBase() {};
 
-        virtual bool DownloadLogFile(const std::string& cosPathName) = 0;
+        virtual bool DownloadLogFile(const std::string& cosPathName, const std::string& localPathName) = 0;
 
         virtual std::string GetTypeName() = 0;
     };

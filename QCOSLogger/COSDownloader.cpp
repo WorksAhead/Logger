@@ -25,7 +25,7 @@ using namespace qcloud_cos;
 using namespace QCOS;
 
 bool
-COSDownloader::DownloadLogFile(const std::string& cosPathName)
+COSDownloader::DownloadLogFile(const std::string& cosPathName, const std::string& localPathName)
 {
     std::string bucket = "testbucket";
     std::string dstpath = cosPathName;
@@ -66,8 +66,7 @@ COSDownloader::DownloadLogFile(const std::string& cosPathName)
         }
 
         boost::filesystem::ofstream fileStream;
-        std::string savePath = "./DownloadDir" + cosPathName;
-        fileStream.open(savePath, std::ofstream::out | std::ofstream::app);
+        fileStream.open(localPathName, std::ofstream::out | std::ofstream::app);
         fileStream << buf.get();
         fileStream.close();
     }

@@ -35,6 +35,7 @@ namespace QCOS
         void SyncFiles();
 
         std::string GetCOSPathName(const boost::posix_time::ptime& pt);
+        std::string ExtractPath(const std::string& fullPathName);
 
     private:
         std::string m_DownloadDir;
