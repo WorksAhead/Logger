@@ -1,5 +1,9 @@
 #pragma once
+
+#if defined(__linux__)
+
 #include "DownloaderBase.h"
+#include "CosApi.h"
 
 namespace QCOS
 {
@@ -16,7 +20,10 @@ namespace QCOS
         }
 
     private:
-        //qcloud_cos::CosConfig m_CosConfig{ "cosconfig.json" };
-        //qcloud_cos::CosAPI m_Cos{ m_CosConfig };
+        qcloud_cos::CosConfig m_CosConfig{ "cosconfig.json" };
+        qcloud_cos::CosAPI m_Cos{ m_CosConfig };
     };
 }
+
+#endif
+
