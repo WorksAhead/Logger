@@ -159,7 +159,7 @@ int main(int ac, char* av[])
 #if defined (__linux__)
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help", "Produce help message")
+        ("help", "Produce help message.")
         ("daemon,d", "Running as a daemon process.")
         ;
 
