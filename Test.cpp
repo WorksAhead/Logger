@@ -59,53 +59,95 @@ int Daemonize(const char* name)
 #if defined (_WIN32)
     // Nothing to do
 #elif defined (__linux__) || defined (__FreeBSD__)
-    pid_t child;
-    FILE* f;
-    char pidFile[80];
-
-    child = fork();
-    if (!child)
+    // Fork the process and have the parent exit. If the process was started
+    // from a shell, this returns control to the user. Forking a new process is
+    // also a prerequisite for the subsequent call to setsid().
+    if (pid_t pid = fork())
     {
-        child = fork();
-        if (child) exit(0);
-    }
-    else
-    {
-        // The master process collects the zombie 
-        // process of forking the child daemon and exits 
-        //#if !defined (__FreeBSD__)
-        //                waitpid(child, NULL, 0);
-        //                return 1;
-        //#else
-        exit(0);
-        //#endif
+        if (pid > 0)
+        {
+            // We're in the parent process and need to exit.
+            //
+            // When the exit() function is used, the program terminates without
+            // invoking local variables' destructors. Only global variables are
+            // destroyed. As the io_service object is a local variable, this means
+            // we do not have to call:
+            //
+            //   io_service.notify_fork(boost::asio::io_service::fork_parent);
+            //
+            // However, this line should be added before each call to exit() if
+            // using a global io_service object. An additional call:
+            //
+            //   io_service.notify_fork(boost::asio::io_service::fork_prepare);
+            //
+            // should also precede the second fork().
+            exit(0);
+        }
+        else
+        {
+            QCOS_LOG(error) << "First fork failed.";
+            exit(-1);
+        }
     }
 
-    // Get rid of controlling terminal.
+    // Make the process a new session leader. This detaches it from the
+    // terminal.
     setsid();
 
-    // Have to close the original standard I/O 
-    // streams and create our own standard I/O streams,
-    // otherwise the parment process cannot exit cleanly 
+    // A process inherits its working directory from its parent. This could be
+    // on a mounted filesystem, which means that the running daemon would
+    // prevent this filesystem from being unmounted. Changing to the root
+    // directory avoids this problem.
+    // chdir("/");
+
+    // The file mode creation mask is also inherited from the parent process.
+    // We don't want to restrict the permissions on files created by the
+    // daemon, so the mask is cleared.
     umask(0);
+
+    // A second fork ensures the process cannot acquire a controlling terminal.
+    if (pid_t pid = fork())
+    {
+        if (pid > 0)
+        {
+            exit(0);
+        }
+        else
+        {
+            QCOS_LOG(error) << "Second fork failed.";
+            exit(-1);
+        }
+    }
+
+    // Close the standard streams. This decouples the daemon from the terminal
+    // that started it.
     close(0);
     close(1);
     close(2);
-    open("/dev/null", O_RDWR, 0);
-    dup2(0, 1);
-    dup2(0, 2);
 
-    snprintf(pidFile, sizeof(pidFile), "/var/run/%s.pid", name);
-    f = fopen(pidFile, "w");
-    if (!f)
+    // We don't want the daemon to have any standard input.
+    if (open("/dev/null", O_RDONLY) < 0)
     {
-        fprintf(stderr, "failed to open %s: %s", pidFile, strerror(errno));
+        QCOS_LOG(error) << "Unable to open /dev/null.";
+        exit(-1);
     }
-    else
+
+    // Send standard output to a log file.
+    const char* output = "./LoginServer.log";
+    const int flags = O_WRONLY | O_CREAT | O_APPEND;
+    const mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (open(output, flags, mode) < 0)
     {
-        fprintf(f, "%u\n", getpid());
-        fclose(f);
-}
+        QCOS_LOG(error) << "Unable to open output file " << output << ".";
+        exit(-1);
+    }
+
+    // Also send standard error to the same log file.
+    if (dup(1) < 0)
+    {
+        QCOS_LOG(error) << "Unable to dup output descriptor.";
+        exit(-1);
+    }
 #endif
     return 0;
 }
